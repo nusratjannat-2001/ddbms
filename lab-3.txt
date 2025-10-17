@@ -1,0 +1,118 @@
+docker container start -i myHadoop
+
+**command for hive**
+
+CREATE TABLE IF NOT EXISTS education_db.student_results (
+    student_id INT,
+    subject_code STRING,
+    marks INT,
+    grade STRING
+)
+PARTITIONED BY (
+    exam_year INT,
+    exam_session STRING
+)
+STORED AS PARQUET
+LOCATION '/TeacherDetail/Result';
+
+
+CREATE TABLE IF NOT EXISTS education_db.result_tmp (
+    student_id INT,
+    subject_code STRING,
+    marks INT,
+    grade STRING,
+    exam_year INT,
+    exam_session STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/Result_tmp';
+
+**command for window**
+docker cp "D:\4th year even sem\DDBMS lab\lab-3\student_results.csv" myHadoop:/test/
+docker cp "D:\4th year even sem\DDBMS lab\lab-3\courses.csv" myHadoop:/test/
+docker cp "D:\4th year even sem\DDBMS lab\lab-3\students.csv" myHadoop:/test/
+
+**command for hive**
+LOAD DATA LOCAL INPATH '/test/student_results.csv' INTO TABLE education_db.result_tmp;
+
+use education_db;
+select * from result_tmp;
+
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT OVERWRITE TABLE student_results PARTITION(exam_year,exam_session)SELECT student_id,subject_code,marks,grade,exam_year,exam_session from result_tmp;
+
+show partitions student_results;
+select * from student_results where exam_year=2022 and exam_session='Summer';
+
+quit;
+hdfs dfs -ls /TeacherDetail/Result_tmp
+
+hive
+use education_db;
+show tables;
+drop table result_tmp;
+show tables;
+quit;
+hdfs dfs -ls /TeacherDetail/Result_tmp
+hive
+use ducation_db;
+show partitions student_results;
+
+--Table drop--
+ALTER TABLE education_db.student_results
+DROP PARTITION(exam_year=2022,exam_session='Fall');
+show partitions student_results;
+
+quit;
+hdfs dfs -ls /TeacherDetail/Result/exam_year=2022
+hdfs dfs -rm -r /TeacherDetail/Result/exam_year=2022/exam session=Spring
+hive
+use education_db;
+show partitions student_results;
+select * from student_results where exam_year=2022 and exam_session='Spring';
+MSCK REPAIR TABLE education_db.student_results;
+
+--insert table--
+INSERT INTO TABLE education_db.student_results
+PARTITION(exam_year=2022,exam_session='Fall')
+VALUES
+(33,'C028',76,'B'),
+(23,'C038',56,'C'),
+(8,'C058',26,'F'),
+(78,'C098',86,'A');
+
+select * from student_results where exam_year=2022 and exam_session='Fall';
+quit;
+hdfs dfs -ls /TeacherDetail/Result/exam_year=2022/exam_session=Fall
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS students (
+    student_id INT,
+    student_name STRING,
+    dob STRING,
+    department STRING
+)
+COMMENT 'student_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/student_Tmp';
+
+ 
+LOAD DATA LOCAL INPATH '/test/students.csv' INTO TABLE education_db.students;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS courses (
+    course_id INT,
+    course_name STRING,
+    credits STRING,
+    department STRING
+)
+COMMENT 'course_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/course_Tmp';
+
+ 
+LOAD DATA LOCAL INPATH '/test/courses.csv' INTO TABLE education_db.courses;

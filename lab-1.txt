@@ -1,0 +1,101 @@
+
+esc r colon chap diye wq likhle editor theke ber hoya jai
+***command for docker command prompt***
+
+docker pull macio232/hadoop-pseudo-distributed-mode
+docker run -p 9870:9870 -p 8088:8088 -it --name=myHadoop macio232/hadoop-pseudo-distributed-mode
+
+docker container start -i myHadoop
+mkdir test
+hdfs dfs -ls /
+hdfs dfs -mkdir -p /TeacherDetail
+hdfs dfs -mkdir -p /TeacherDetail/Department
+hdfs dfs -mkdir -p /TeacherDetail/Course
+hdfs dfs -mkdir -p /TeacherDetail/Teacher
+hdfs dfs -ls /TeacherDetail
+hive
+CREATE DATABASE IF NOT EXISTS TeacherInfo;
+show databases;
+use teacherInfo;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Department(
+    Dept_Id INT,
+    Dept_Name STRING,
+    Building STRING
+)
+COMMENT 'Dept_Details'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/Department';
+
+desc Department;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Teacher (
+    Teacher_Id INT,
+    Teacher_Name STRING,
+    Email STRING,
+    Dept_Id INT
+)
+COMMENT 'Teacher_Details'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/Teacher';
+
+desc Teacher;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Course (
+    course_Id INT,
+    course_Name STRING,
+    credit STRING,
+    Dept_Id INT,
+    teacher_id INT
+)
+COMMENT 'Teacher_Details'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/Course';
+
+desc Course;
+
+show tables;
+
+
+
+***command for window command prompt--local theke docker a file send kora***
+
+docker exec -it myHadoop mkdir -p /test
+docker cp "D:\4th year even sem\DDBMS lab\lab-1\Teacher.csv" myHadoop:/test/
+
+docker cp "D:\4th year even sem\DDBMS lab\lab-1\Department.csv" myHadoop:/test/
+
+docker cp "D:\4th year even sem\DDBMS lab\lab-1\Course.csv" myHadoop:/test/
+
+
+***command for docker command prompt***
+ls
+cd /test
+hive
+LOAD DATA LOCAL INPATH '/test/Department.csv' INTO TABLE TeacherInfo.Department;
+
+LOAD DATA LOCAL INPATH '/test/Teacher.csv' INTO TABLE TeacherInfo.Teacher;
+
+LOAD DATA LOCAL INPATH '/test/Course.csv' INTO TABLE TeacherInfo.Course;
+
+use TeacherInfo;
+SELECT * FROM department;
+SELECT * FROM teacher;
+SELECT * FROM course;
+quit;
+cd /test
+hdfs dfs -ls /TeacherDetail
+hdfs dfs -ls /TeacherDetail/Department
+hdfs dfs -ls /TeacherDetail/Course
+hdfs dfs -ls /TeacherDetail/Teacher
+hdfs dfs -rm /TeacherDetail/Teacher/Department.csv
+
+
+
+

@@ -1,0 +1,66 @@
+# if not pulled earlier
+docker pull macio232/hadoop-pseudo-distributed-mode
+docker run -p 9870:9870 -p 8088:8088 -it --name=myHadoop macio232/hadoop-pseudo-distributed-mode
+
+# if pulled earlier
+docker container start -i myHadoop
+hdfs dfs -ls /
+hdfs dfs -mkdir -p /TeacherDetail/department
+hdfs dfs -mkdir -p /TeacherDetail/course
+hdfs dfs -mkdir -p /TeacherDetail/teacher
+
+
+hive
+create database Teacherinfo;
+use teacherinfo;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Teacher (
+    Teacher_id INT,
+    Teacher_name STRING,
+    Email STRING
+)
+COMMENT 'Teacher_Details'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/teacher';
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Course (
+    course_id INT,
+    course_name STRING,
+    credit INT,
+    dept_id INT,
+    teacher_id INT
+)
+
+COMMENT 'Course information'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/course';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS Department (
+    dep_id INT,
+    dept_name STRING,
+    building STRING
+)
+
+COMMENT 'Dept Details'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/TeacherDetail/department';
+
+docker cp C:/Users/User/Desktop/Teacher.csv myHadoop:\test
+docker cp C:/Users/User/Desktop/Department.csv myHadoop:\test
+docker cp C:/Users/User/Desktop/Course.csv myHadoop:\test
+
+LOAD DATA LOCAL INPATH '/test/Teacher.csv' INTO TABLE Teacherinfo.teacher;
+LOAD DATA LOCAL INPATH '/test/Course.csv' INTO TABLE Teacherinfo.course;
+LOAD DATA LOCAL INPATH '/test/Department.csv' INTO TABLE Teacherinfo.department;
+
+select * from teacher;
+select * from course;
+select * from department;
+

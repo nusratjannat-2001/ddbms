@@ -1,0 +1,139 @@
+docker container start -i myHadoop
+
+---For teacher_new table---
+**command for hive**
+
+CREATE EXTERNAL TABLE IF NOT EXISTS teacher_tmp (
+    Teacher_id INT,
+    Teacher_name STRING,
+    Email STRING,
+    Dept_id STRING
+)
+COMMENT 'teacher_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/Teacher_Tmp';
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS teacher_new (
+    Teacher_id INT,
+    Teacher_name STRING,
+    Email STRING
+)
+PARTITIONED BY (Dept_id STRING)
+STORED AS PARQUET
+LOCATION '/TeacherDetail/Teacher_new';
+
+**command for window command prompt**
+
+docker cp "D:\4th year even sem\DDBMS lab\lab-2\Teacher_New.csv" myHadoop:/test/
+
+**command for hive**
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT OVERWRITE TABLE teacher_new PARTITION(Dept_id)SELECT Teacher_id,Teacher_name,Email,Dept_id from teacher_tmp;
+
+SELECT * FROM teacher_new
+WHERE Dept_id='1' or Dept_id='6';
+
+show partitions teacher_new;
+desc teacher-new;
+
+**command for root**
+hdfs dfs -ls /TeacherDetail/Teacher_new
+hdfs dfs -ls /TeacherDetail/Teacher_new/dept_id=9
+
+
+
+
+
+
+---For department_new table---
+**command for hive**
+
+CREATE EXTERNAL TABLE IF NOT EXISTS department_tmp (
+    Dept_id STRING,
+    Dept_name STRING,
+    Building_id STRING
+)
+COMMENT 'department_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/Department_Tmp';
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS department_new (
+    Dept_id STRING,
+    Building_id STRING
+)
+PARTITIONED BY (Dept_name STRING)
+STORED AS PARQUET
+LOCATION '/TeacherDetail/department_new';
+
+**command for window command prompt**
+
+docker cp "D:\4th year even sem\DDBMS lab\lab-2\Department_New.csv" myHadoop:/test/
+
+**command for hive**
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT OVERWRITE TABLE department_new PARTITION(Dept_id)SELECT Teacher_id,Teacher_name,Email,Dept_id from department_tmp;
+
+SELECT * FROM department_new
+WHERE Dept_name='MATH' or Dept_id='CSE';
+
+show partitions department_new;
+desc department-new;
+
+**command for root**
+hdfs dfs -ls /TeacherDetail/Department_new
+hdfs dfs -ls /TeacherDetail/Department_new/dept_name=math
+
+
+
+
+
+---For course_new table---temp r new table same thakbe karon kono partition hobe na
+**command for hive**
+
+CREATE EXTERNAL TABLE IF NOT EXISTS course_tmp (
+    course_Id INT,
+    course_Name STRING,
+    credit STRING,
+    Dept_Id INT,
+    teacher_id INT
+)
+COMMENT 'teacher_tmp'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/TeacherDetail/Course_Tmp';
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS course_new (
+    course_Id INT,
+    course_Name STRING,
+    credit STRING,
+    Dept_Id INT,
+    teacher_id INT
+)
+STORED AS PARQUET
+LOCATION '/TeacherDetail/course_new';
+
+**command for window command prompt**
+
+docker cp "D:\4th year even sem\DDBMS lab\lab-2\Course_New.csv" myHadoop:/test/
+
+**command for hive**
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT OVERWRITE TABLE course_new PARTITION(Dept_id)SELECT Teacher_id,Teacher_name,Email,Dept_id from course_tmp;
+
+SELECT * FROM course_new
+
+desc course_new;
+
+**command for root**
+hdfs dfs -ls /TeacherDetail/Course_new

@@ -1,0 +1,25 @@
+---esc r colon chap diye wq likhle editor theke ber hoya jai---
+docker container start -i myHadoop
+
+**command prompt hadoop**
+docker container start -i myHadoop
+cd /home/Hadoop
+mkdir word or hdfs dfs -mkdir -p /word
+cd /word
+vi WordCount.java
+rm WordCount.java
+javac -classpath $(hadoop classpath) -d . WordCount.java
+ls
+jar cf wordcounlst.jar WordCount*.class
+mkdir input
+echo "Hello hadoop" > input/file.txt
+cd input
+ls
+vi file.txt
+cd ..
+hdfs dfs -mkdir -p /user/hadoop/input
+hdfs dfs -put ./input/file.txt /user/hadoop/input/
+hdfs dfs -ls /user/hadoop/input
+hadoop jar wordcount.jar WordCount /user/hadoop/input /user/hadoop/output
+hdfs dfs -ls /user/hadoop/output
+hdfs dfs -cat /user/hadoop/output/part-00000
