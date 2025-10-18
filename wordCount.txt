@@ -66,3 +66,204 @@ public class WordCount {
         JobClient.runJob(conf);
     }
 }
+
+##departmentCount
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class DepartmentCount {
+
+    // Mapper Class
+    public static class DeptMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text department = new Text();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            // Split CSV line: student_id,name,department
+            String[] fields = value.toString().split(",");
+
+            if (fields.length == 3) { // ensure it has department
+                department.set(fields[2].trim());
+                context.write(department, one);
+            }
+        }
+    }
+
+    // Reducer Class
+    public static class DeptReducer
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            context.write(key, new IntWritable(sum));
+        }
+    }
+
+    // Driver Code
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "department count");
+
+        job.setJarByClass(DepartmentCount.class);
+        job.setMapperClass(DeptMapper.class);
+        job.setCombinerClass(DeptReducer.class);
+        job.setReducerClass(DeptReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+##lineCount
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class LineCount {
+
+    // Mapper Class
+    public static class LineMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text lineKey = new Text("Total Lines");
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+            // Each line = one record
+            context.write(lineKey, one);
+        }
+    }
+
+    // Reducer Class
+    public static class LineReducer
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+            int count = 0;
+            for (IntWritable val : values) {
+                count += val.get();
+            }
+            context.write(key, new IntWritable(count));
+        }
+    }
+
+    // Driver Code
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "line count");
+
+        job.setJarByClass(LineCount.class);
+        job.setMapperClass(LineMapper.class);
+        job.setCombinerClass(LineReducer.class);
+        job.setReducerClass(LineReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+
+##characterCount
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class CharacterCount {
+
+    // Mapper Class
+    public static class CharMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable charCount = new IntWritable(0);
+        private Text word = new Text("Total Characters");
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+            // Convert line to string
+            String line = value.toString();
+
+            // Count characters (including spaces)
+            int length = line.length();
+
+            charCount.set(length);
+            context.write(word, charCount);
+        }
+    }
+
+    // Reducer Class
+    public static class CharReducer
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+            int total = 0;
+            for (IntWritable val : values) {
+                total += val.get();
+            }
+            context.write(key, new IntWritable(total));
+        }
+    }
+
+    // Driver Code
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "character count");
+
+        job.setJarByClass(CharacterCount.class);
+        job.setMapperClass(CharMapper.class);
+        job.setCombinerClass(CharReducer.class);
+        job.setReducerClass(CharReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
